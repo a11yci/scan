@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: a11yci/scan@v1
         with:
-          url: "https://staging.myapp.com"  # your preview / staging URL
+          url: "https://staging.myapp.com"  # or ${{ vars.STAGING_URL }}
           api-key: ${{ secrets.A11YCI_KEY }}
 ```
 

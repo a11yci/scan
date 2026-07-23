@@ -1,0 +1,20 @@
+{
+  "name": "a11yci-scan",
+  "version": "1.0.0",
+  "description": "a11yci GitHub Action — WCAG accessibility scanner",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "ncc build src/index.js -o dist --source-map --license licenses.txt",
+    "build:watch": "ncc build src/index.js -o dist --watch"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@axe-core/playwright": "^4.9.1",
+    "playwright": "^1.45.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.1"
+  },
+  "license": "MIT"
+}

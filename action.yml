@@ -1,0 +1,49 @@
+name: "a11yci Accessibility Scanner"
+description: "Scan a URL for WCAG accessibility violations on every pull request"
+author: "a11yci"
+
+branding:
+  icon: "eye"
+  color: "blue"
+
+inputs:
+  url:
+    description: "URL to scan (your staging or preview URL)"
+    required: true
+  api-key:
+    description: "a11yci API key (store as a GitHub secret)"
+    required: true
+  repo:
+    description: "Repository in owner/repo format (defaults to github.repository)"
+    required: false
+    default: ${{ github.repository }}
+  fail-on:
+    description: "Minimum severity that blocks the PR: critical, serious, moderate, minor, or none"
+    required: false
+    default: "serious"
+  headers:
+    description: "Extra HTTP headers as JSON (e.g. for Vercel protection bypass or Cloudflare Access)"
+    required: false
+    default: "{}"
+  api-url:
+    description: "Override the a11yci API base URL (for local testing)"
+    required: false
+    default: "https://web-production-02844.up.railway.app"
+
+outputs:
+  scan-id:
+    description: "The scan ID created by a11yci"
+  new-critical:
+    description: "Count of new critical violations"
+  new-serious:
+    description: "Count of new serious violations"
+  new-moderate:
+    description: "Count of new moderate violations"
+  new-minor:
+    description: "Count of new minor violations"
+  blocked:
+    description: "Whether the PR is blocked (true/false)"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"

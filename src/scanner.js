@@ -2,7 +2,7 @@ const { chromium } = require("playwright");
 const { AxeBuilder } = require("@axe-core/playwright");
 
 async function scanUrl(url, extraHeaders = {}) {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ channel: "chrome" });
   try {
     const context = await browser.newContext({
       extraHTTPHeaders: extraHeaders,

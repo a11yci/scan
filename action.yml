@@ -61,4 +61,11 @@ runs:
       id: scan
       shell: bash
       working-directory: ${{ github.action_path }}
+      env:
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_API-KEY: ${{ inputs.api-key }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_FAIL-ON: ${{ inputs.fail-on }}
+        INPUT_HEADERS: ${{ inputs.headers }}
+        INPUT_API-URL: ${{ inputs.api-url }}
       run: node src/index.js

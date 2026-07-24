@@ -33,17 +33,32 @@ inputs:
 outputs:
   scan-id:
     description: "The scan ID created by a11yci"
+    value: ${{ steps.scan.outputs.scan-id }}
   new-critical:
     description: "Count of new critical violations"
+    value: ${{ steps.scan.outputs.new-critical }}
   new-serious:
     description: "Count of new serious violations"
+    value: ${{ steps.scan.outputs.new-serious }}
   new-moderate:
     description: "Count of new moderate violations"
+    value: ${{ steps.scan.outputs.new-moderate }}
   new-minor:
     description: "Count of new minor violations"
+    value: ${{ steps.scan.outputs.new-minor }}
   blocked:
     description: "Whether the PR is blocked (true/false)"
+    value: ${{ steps.scan.outputs.blocked }}
 
 runs:
-  using: "node20"
-  main: "dist/index.js"
+  using: composite
+  steps:
+    - name: Install action dependencies
+      shell: bash
+      run: npm ci
+      working-directory: ${{ github.action_path }}
+    - name: Run a11yci scan
+      id: scan
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: node src/index.js

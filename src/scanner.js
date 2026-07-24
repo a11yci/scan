@@ -11,24 +11,15 @@ async function scanUrl(url, extraHeaders = {}) {
 
     await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
 
+    const start = Date.now();
     const results = await new AxeBuilder({ page }).analyze();
-
-    const violations = results.violations.map((v) => ({
-      rule_id: v.id,
-      impact: v.impact,
-      description: v.description,
-      help_url: v.helpUrl,
-      nodes: v.nodes.map((n) => ({
-        html: n.html,
-        target: n.target,
-        failure_summary: n.failureSummary,
-      })),
-    }));
+    const scan_duration_ms = Date.now() - start;
 
     return {
       url,
-      violations,
-      violation_count: violations.length,
+      scan_duration_ms,
+      violations: results.violations,
+      violation_count: results.violations.length,
     };
   } finally {
     await browser.close();

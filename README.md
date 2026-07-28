@@ -95,6 +95,25 @@ The `fail-on` input controls which severity levels block the PR. Only **new** vi
 
 New accounts start in report-only mode: you see every violation in the PR comment and dashboard, but nothing blocks. Once your team trusts the signal, set `fail-on: serious` to start blocking merges on new violations.
 
+## Documented exceptions
+
+Some violations are real but out of your hands — a YouTube embed's missing captions, a third-party ad widget. Instead of disabling the check, document them in an `a11yci.yml` at the root of your repository:
+
+```yaml
+ignore:
+  - rule: video-caption          # axe rule id (required)
+    selector: ".youtube-embed *" # CSS selector for the affected elements (required)
+    reason: "Third-party YouTube embed — captions provided by YouTube"  # required, non-empty
+    added_date: 2026-07-28       # optional
+    ticket: A11Y-42              # optional
+```
+
+Matching violations still appear in your data and PR comment — listed under **📋 Documented exceptions (not blocking)** — but they no longer count as new violations or block merges. This is documentation, not suppression: each exception carries a written reason and its full history (added, active since, removed) in the a11yci dashboard, ready for compliance reporting.
+
+A rule missing a non-empty `reason` (or `rule`/`selector`) is skipped with a warning in the action log and the PR comment — the violations it targets stay active. Exceptions never fail the scan.
+
+Limitations (v1): selectors are evaluated on the live page at scan time and don't reach into shadow DOM or iframes; an exception applies only when both the rule id and the selector match.
+
 ### What happens if a11yci is down?
 
 **a11yci never blocks your merge due to our downtime.** If the a11yci API is unreachable for any reason — network error, timeout, or server error — the action logs a warning, skips the scan, and exits successfully. Your pipeline only fails when new violations at or above your `fail-on` threshold are actually found.

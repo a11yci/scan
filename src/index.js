@@ -2,6 +2,7 @@ const core = require("@actions/core");
 const github = require("@actions/github");
 const { createScan, ingestResults, ApiUnavailableError } = require("./api");
 const { scanUrl } = require("./scanner");
+const { loadIgnoreRules, CONFIG_FILE } = require("./config");
 
 const SEVERITIES = ["critical", "serious", "moderate", "minor"];
 
@@ -20,18 +21,21 @@ function isBlocked(summary, failOn) {
   return SEVERITIES.slice(0, idx + 1).some((s) => (summary.new[s] || 0) > 0);
 }
 
-function buildStepSummary(summary, blocked, failOn) {
+function buildStepSummary(summary, blocked, failOn, exceptions = []) {
   const rows = SEVERITIES.map(
     (s) => `| ${s.charAt(0).toUpperCase() + s.slice(1)} | ${summary.new[s] || 0} | ${summary.total[s] || 0} |`
   ).join("\n");
 
   const status = blocked ? "❌ PR blocked" : "✅ PR passed";
+  const exceptionLine = exceptions.length
+    ? `\n\n📋 ${exceptions.length} documented exception${exceptions.length === 1 ? "" : "s"} (not blocking)`
+    : "";
 
   return `## a11yci Accessibility Scan ${status}
 
 | Severity | New | Total |
 |----------|-----|-------|
-${rows}
+${rows}${exceptionLine}
 
 ${blocked ? `> **Blocked:** new violations at or above **${failOn}** severity found. Fix them or lower the \`fail-on\` threshold.` : ""}
 `.trim();
@@ -65,14 +69,32 @@ async function run() {
     core.info(`Scan created: ${scan.id}`);
     core.setOutput("scan-id", scan.id);
 
+    // Ignore rules go to the API verbatim; violations are never filtered
+    // client-side. The scanner only annotates selector matches in-DOM.
+    const ignoreRules = loadIgnoreRules(core.warning);
+    if (ignoreRules.length) {
+      core.info(`Loaded ${ignoreRules.length} ignore rule(s) from ${CONFIG_FILE}`);
+    }
+
     core.info(`Scanning ${url} with axe-core…`);
-    const page = await scanUrl(url, extraHeaders);
+    const page = await scanUrl(url, extraHeaders, ignoreRules);
     core.info(`Found ${page.violation_count} violations on ${url}`);
 
     core.info("Ingesting results…");
-    const result = await ingestResults(apiUrl, apiKey, scan.id, [page]);
+    const result = await ingestResults(apiUrl, apiKey, scan.id, [page], ignoreRules);
 
     const { summary } = result;
+    const exceptions = result.exceptions || [];
+    for (const invalid of result.invalid_exception_rules || []) {
+      const label = invalid.rule || `entry #${(invalid.index ?? 0) + 1}`;
+      core.warning(
+        `Invalid exception in ${CONFIG_FILE} — ${label}: ${(invalid.errors || []).join("; ")}. ` +
+        "This exception was ignored; the violation it targets stays active."
+      );
+    }
+    if (exceptions.length) {
+      core.info(`📋 ${exceptions.length} documented exception(s) applied (not blocking)`);
+    }
     core.setOutput("new-critical",  String(summary.new.critical  || 0));
     core.setOutput("new-serious",   String(summary.new.serious   || 0));
     core.setOutput("new-moderate",  String(summary.new.moderate  || 0));
@@ -81,7 +103,7 @@ async function run() {
     const blocked = isBlocked(summary, failOn);
     core.setOutput("blocked", String(blocked));
 
-    await core.summary.addRaw(buildStepSummary(summary, blocked, failOn)).write();
+    await core.summary.addRaw(buildStepSummary(summary, blocked, failOn, exceptions)).write();
 
     if (blocked) {
       core.setFailed(

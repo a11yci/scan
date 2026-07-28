@@ -50,13 +50,14 @@ function request(method, url, body, apiKey) {
   });
 }
 
-async function createScan(apiUrl, apiKey, { repo, prNumber, branch, commitSha }) {
+async function createScan(apiUrl, apiKey, { repo, prNumber, branch, commitSha, failOn }) {
   const res = await request("POST", `${apiUrl}/api/v1/scans`, {
     repo,
     triggered_by: "github_action",
     pr_number: prNumber,
     branch,
     commit_sha: commitSha,
+    fail_on: failOn,
   }, apiKey);
 
   if (res.status !== 201) {

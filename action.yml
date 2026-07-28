@@ -18,9 +18,9 @@ inputs:
     required: false
     default: ${{ github.repository }}
   fail-on:
-    description: "Minimum severity that blocks the PR: critical, serious, moderate, minor, or none"
+    description: "Minimum severity that blocks the PR: critical, serious, moderate, minor, or none. Defaults to none (report-only) so new teams see violations without being blocked."
     required: false
-    default: "serious"
+    default: "none"
   headers:
     description: "Extra HTTP headers as JSON (e.g. for Vercel protection bypass or Cloudflare Access)"
     required: false

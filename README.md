@@ -36,7 +36,7 @@ Add `A11YCI_KEY` to your repo secrets (Settings → Secrets and variables → Ac
 |---|---|---|---|
 | `url` | ✅ | — | URL to scan (staging or preview environment) |
 | `api-key` | ✅ | — | a11yci API key — store as a GitHub secret |
-| `fail-on` | | `serious` | Minimum severity that blocks the PR: `critical`, `serious`, `moderate`, `minor`, or `none` |
+| `fail-on` | | `none` | Minimum severity that blocks the PR: `critical`, `serious`, `moderate`, `minor`, or `none` (report-only, the default) |
 | `repo` | | `github.repository` | Repository in `owner/repo` format — auto-detected from context |
 | `headers` | | `{}` | Extra HTTP headers as JSON — for Vercel protection bypass, Cloudflare Access, etc. |
 | `api-url` | | *(a11yci production)* | Override API base URL (local testing only) |
@@ -88,10 +88,12 @@ The `fail-on` input controls which severity levels block the PR. Only **new** vi
 | `fail-on` value | Blocks on |
 |---|---|
 | `critical` | Critical only |
-| `serious` *(default)* | Critical + serious |
+| `serious` | Critical + serious |
 | `moderate` | Critical + serious + moderate |
 | `minor` | Any new violation |
-| `none` | Never blocks (report only) |
+| `none` *(default)* | Never blocks (report only) |
+
+New accounts start in report-only mode: you see every violation in the PR comment and dashboard, but nothing blocks. Once your team trusts the signal, set `fail-on: serious` to start blocking merges on new violations.
 
 ### What happens if a11yci is down?
 

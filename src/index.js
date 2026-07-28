@@ -6,7 +6,7 @@ const { scanUrl } = require("./scanner");
 const SEVERITIES = ["critical", "serious", "moderate", "minor"];
 
 function parseSeverity(input) {
-  const val = (input || "serious").toLowerCase();
+  const val = (input || "none").toLowerCase();
   if (val === "none") return null;
   if (!SEVERITIES.includes(val)) {
     throw new Error(`Invalid fail-on value: "${val}". Must be one of: ${SEVERITIES.join(", ")}, none`);
@@ -59,7 +59,9 @@ async function run() {
     const commitSha = ctx.payload.pull_request?.head?.sha ?? ctx.sha ?? null;
 
     core.info(`Creating scan for ${repo} — ${url}`);
-    const scan = await createScan(apiUrl, apiKey, { repo, prNumber, branch, commitSha });
+    const scan = await createScan(apiUrl, apiKey, {
+      repo, prNumber, branch, commitSha, failOn: failOn ?? "none",
+    });
     core.info(`Scan created: ${scan.id}`);
     core.setOutput("scan-id", scan.id);
 

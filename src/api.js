@@ -2,6 +2,12 @@ const https = require("https");
 const http = require("http");
 const { URL } = require("url");
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
+// Any failure to get a successful answer from the a11yci API. The action
+// fails OPEN on this — a11yci downtime must never block a customer's merge.
+class ApiUnavailableError extends Error {}
+
 function request(method, url, body, apiKey) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
@@ -33,7 +39,12 @@ function request(method, url, body, apiKey) {
       }
     );
 
-    req.on("error", reject);
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      req.destroy(new ApiUnavailableError(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`));
+    });
+    req.on("error", (err) =>
+      reject(err instanceof ApiUnavailableError ? err : new ApiUnavailableError(err.message))
+    );
     if (payload) req.write(payload);
     req.end();
   });
@@ -49,7 +60,7 @@ async function createScan(apiUrl, apiKey, { repo, prNumber, branch, commitSha })
   }, apiKey);
 
   if (res.status !== 201) {
-    throw new Error(`Failed to create scan: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new ApiUnavailableError(`Failed to create scan: ${res.status} ${JSON.stringify(res.body)}`);
   }
   return res.body;
 }
@@ -61,9 +72,9 @@ async function ingestResults(apiUrl, apiKey, scanId, pages) {
   }, apiKey);
 
   if (res.status !== 200) {
-    throw new Error(`Failed to ingest results: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new ApiUnavailableError(`Failed to ingest results: ${res.status} ${JSON.stringify(res.body)}`);
   }
   return res.body;
 }
 
-module.exports = { createScan, ingestResults };
+module.exports = { createScan, ingestResults, ApiUnavailableError };

@@ -93,6 +93,10 @@ The `fail-on` input controls which severity levels block the PR. Only **new** vi
 | `minor` | Any new violation |
 | `none` | Never blocks (report only) |
 
+### What happens if a11yci is down?
+
+**a11yci never blocks your merge due to our downtime.** If the a11yci API is unreachable for any reason — network error, timeout, or server error — the action logs a warning, skips the scan, and exits successfully. Your pipeline only fails when new violations at or above your `fail-on` threshold are actually found.
+
 ---
 
 ## Bypass headers

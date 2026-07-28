@@ -1,6 +1,6 @@
 const core = require("@actions/core");
 const github = require("@actions/github");
-const { createScan, ingestResults } = require("./api");
+const { createScan, ingestResults, ApiUnavailableError } = require("./api");
 const { scanUrl } = require("./scanner");
 
 const SEVERITIES = ["critical", "serious", "moderate", "minor"];
@@ -91,6 +91,16 @@ async function run() {
       core.info("a11yci: no new violations above threshold. Check passed.");
     }
   } catch (err) {
+    // Fail OPEN on a11yci API problems (PRD §23 Directive 1): our downtime
+    // must never block a customer's merge. Scanner/config errors still fail.
+    if (err instanceof ApiUnavailableError) {
+      core.warning("a11yci API unavailable — scan skipped");
+      core.warning(`Error: ${err.message}`);
+      await core.summary
+        .addRaw("⚠️ a11yci scan skipped — API unreachable. Build not affected.")
+        .write();
+      return;
+    }
     core.setFailed(err.message);
   }
 }

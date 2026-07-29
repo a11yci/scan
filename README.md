@@ -100,6 +100,8 @@ New accounts start in report-only mode: you see every violation in the PR commen
 Some violations are real but out of your hands — a YouTube embed's missing captions, a third-party ad widget. Instead of disabling the check, document them in an `a11yci.yml` at the root of your repository:
 
 ```yaml
+version: 1                       # schema version (optional, defaults to 1)
+
 ignore:
   - rule: video-caption          # axe rule id (required)
     selector: ".youtube-embed *" # CSS selector for the affected elements (required)
@@ -107,6 +109,8 @@ ignore:
     added_date: 2026-07-28       # optional
     ticket: A11Y-42              # optional
 ```
+
+`version:` identifies the config schema version so future format changes are a version bump, not a breaking change. Unrecognized top-level keys never fail the scan — they're ignored with a warning in the action log (so a typo doesn't fail silently).
 
 Matching violations still appear in your data and PR comment — listed under **📋 Documented exceptions (not blocking)** — but they no longer count as new violations or block merges. This is documentation, not suppression: each exception carries a written reason and its full history (added, active since, removed) in the a11yci dashboard, ready for compliance reporting.
 

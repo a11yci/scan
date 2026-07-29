@@ -4,6 +4,7 @@
   "description": "a11yci GitHub Action — WCAG accessibility scanner",
   "main": "src/index.js",
   "scripts": {
+    "test": "node --test",
     "build": "ncc build src/index.js -o dist --source-map --license licenses.txt",
     "build:watch": "ncc build src/index.js -o dist --watch"
   },

@@ -20,6 +20,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4   # lets the action read a11yci.yml if you add one
       - uses: a11yci/scan@v1
         with:
           url: "https://staging.myapp.com"  # or ${{ vars.STAGING_URL }}
@@ -97,7 +98,9 @@ New accounts start in report-only mode: you see every violation in the PR commen
 
 ## Documented exceptions
 
-Some violations are real but out of your hands — a YouTube embed's missing captions, a third-party ad widget. Instead of disabling the check, document them in an `a11yci.yml` at the root of your repository:
+Some violations are real but out of your hands — a YouTube embed's missing captions, a third-party ad widget. Instead of disabling the check, document them in an `a11yci.yml` at the root of your repository.
+
+> **Your workflow must check out the repo** (`- uses: actions/checkout@v4` before the scan step, as in the quick start) — that's how the action finds `a11yci.yml`. Without it, ignore rules are silently skipped.
 
 ```yaml
 version: 1                       # schema version (optional, defaults to 1)

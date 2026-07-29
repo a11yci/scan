@@ -159,7 +159,7 @@ headers: |
 
 The a11yci GitHub App posts a comment on every PR with a breakdown of new and total violations by severity, links to each failing element, and a link to the full report in the dashboard.
 
-Each violation also includes a ready-to-paste **"Copy to Claude Code"** prompt — a code block describing the violation, the failing element, and how to fix it. Paste it into [Claude Code](https://claude.com/claude-code) (or any coding agent) to apply the fix. The same prompt is available via the **Copy Claude Code prompt** button on each violation in the dashboard.
+Each violation also includes a **"How to fix"** prompt — a code block describing the violation, the failing element, and the fix. Paste it into your AI coding agent (Claude Code, Cursor, Windsurf, …) or follow it by hand. The same prompt is available via the **Copy fix prompt** button on each violation in the dashboard.
 
 ```
 Fix image-alt violation. Element: <img src="/hero.jpg">.

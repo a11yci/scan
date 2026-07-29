@@ -18,7 +18,18 @@ const KNOWN_TOP_LEVEL_KEYS = ["version", "pages", "ignore", "states", "exercise"
 function loadIgnoreRules(warn = () => {}) {
   const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
   const configPath = path.join(workspace, CONFIG_FILE);
-  if (!fs.existsSync(configPath)) return [];
+  if (!fs.existsSync(configPath)) {
+    // An empty workspace means the workflow has no checkout step — the one
+    // case where a customer's a11yci.yml would be silently unreadable. A
+    // checked-out repo without the file is normal and stays quiet.
+    if (workspaceIsEmpty(workspace)) {
+      warn(
+        `Workspace is empty — add an actions/checkout step before a11yci/scan ` +
+          `if you want ${CONFIG_FILE} (documented exceptions) to be read.`
+      );
+    }
+    return [];
+  }
 
   let config;
   try {
@@ -46,6 +57,14 @@ function loadIgnoreRules(warn = () => {}) {
     return [];
   }
   return rules;
+}
+
+function workspaceIsEmpty(workspace) {
+  try {
+    return fs.readdirSync(workspace).length === 0;
+  } catch {
+    return false;
+  }
 }
 
 module.exports = { loadIgnoreRules, CONFIG_FILE };

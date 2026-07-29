@@ -63,6 +63,41 @@ test("reserved keys (states, exercise) are accepted without warning", () => {
   assert.strictEqual(rules.length, 1);
 });
 
+// Points GITHUB_WORKSPACE at a dir with the given entries (no a11yci.yml).
+function withWorkspace(entries, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "a11yci-config-test-"));
+  for (const name of entries) fs.writeFileSync(path.join(dir, name), "");
+  const prev = process.env.GITHUB_WORKSPACE;
+  process.env.GITHUB_WORKSPACE = dir;
+  try {
+    return fn();
+  } finally {
+    process.env.GITHUB_WORKSPACE = prev;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test("empty workspace (no checkout step) warns that a11yci.yml is unreadable", () => {
+  const warnings = [];
+  const rules = withWorkspace([], () =>
+    loadIgnoreRules((msg) => warnings.push(msg))
+  );
+
+  assert.strictEqual(warnings.length, 1);
+  assert.match(warnings[0], /actions\/checkout/);
+  assert.deepStrictEqual(rules, []);
+});
+
+test("checked-out repo without a11yci.yml stays silent", () => {
+  const warnings = [];
+  const rules = withWorkspace(["package.json"], () =>
+    loadIgnoreRules((msg) => warnings.push(msg))
+  );
+
+  assert.deepStrictEqual(warnings, []);
+  assert.deepStrictEqual(rules, []);
+});
+
 test("unknown key with no ignore section warns and returns no rules", () => {
   const warnings = [];
   const rules = withConfig("exersize: true\n", () =>

@@ -1,0 +1,38 @@
+# Post-deploy hook (CI only): retagging v1 is what customers actually
+# receive, so a v1 push is a "deploy" of the scan Action. Tell the
+# a11yci/e2e harness to run against the newly published Action. The
+# nightly cron is the safety net if this ever misses.
+name: e2e-dispatch
+
+on:
+  push:
+    tags: [v1]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Requires a PAT with repo scope on a11yci/e2e — the repo-scoped
+      # GITHUB_TOKEN cannot dispatch to another repository. No-op if absent.
+      - name: Guard — dispatch token present
+        id: guard
+        env:
+          E2E_DISPATCH_TOKEN: ${{ secrets.E2E_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$E2E_DISPATCH_TOKEN" ]; then
+            echo "No E2E_DISPATCH_TOKEN — skipping harness dispatch."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch harness (source=scan)
+        if: steps.guard.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.E2E_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/a11yci/e2e/dispatches \
+            -f event_type=deploy \
+            -F 'client_payload[source]=scan' \
+            -F "client_payload[ref]=${{ github.ref_name }}"

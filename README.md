@@ -14,6 +14,8 @@ Create `.github/workflows/a11y.yml` in your repo:
 name: Accessibility
 
 on:
+  push:
+    branches: [main]   # scans on main set the baseline PRs are diffed against
   pull_request:
 
 jobs:
@@ -27,7 +29,7 @@ jobs:
           api-key: ${{ secrets.A11YCI_KEY }}
 ```
 
-Add `A11YCI_KEY` to your repo secrets (Settings → Secrets and variables → Actions → New repository secret) and push the file. Every pull request will trigger a scan automatically.
+Add `A11YCI_KEY` to your repo secrets (Settings → Secrets and variables → Actions → New repository secret) and push the file. The first push to `main` runs a scan that becomes your baseline; every pull request after that is diffed against it, so PRs only flag the violations they introduce. Keep the `push` trigger — without a scan on your default branch there is no baseline, and every PR would report all violations as new. If your default branch isn't `main`, use that branch name instead.
 
 ---
 

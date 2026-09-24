@@ -54,6 +54,13 @@ Add `A11YCI_KEY` to your repo secrets (Settings → Secrets and variables → Ac
 | `new-moderate` | Count of new moderate violations |
 | `new-minor` | Count of new minor violations |
 | `blocked` | `true` if the PR is blocked, `false` otherwise |
+| `quota-exceeded` | `true` if the scan was skipped because your organization's monthly scan limit was reached, `false` otherwise |
+
+> **Monthly scan limit:** if your organization has used all of its included
+> scans for the month, the check stays green (we never block a merge over a
+> quota), but the scan is skipped — you'll see a warning annotation, a step
+> summary, and one PR comment explaining it. Scans resume automatically on
+> the 1st.
 
 ---
 

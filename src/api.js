@@ -8,6 +8,12 @@ const REQUEST_TIMEOUT_MS = 30_000;
 // fails OPEN on this — a11yci downtime must never block a customer's merge.
 class ApiUnavailableError extends Error {}
 
+// The org's monthly scan quota is exhausted (422 + code "scan_limit_reached").
+// Distinct from downtime so the check output can say so honestly (G5,
+// specs/2026-09-23-quota-visibility). Keyed off the machine-readable code,
+// never the English message.
+class QuotaExceededError extends Error {}
+
 function request(method, url, body, apiKey) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
@@ -60,6 +66,9 @@ async function createScan(apiUrl, apiKey, { repo, prNumber, branch, commitSha, f
     fail_on: failOn,
   }, apiKey);
 
+  if (res.status === 422 && res.body && res.body.code === "scan_limit_reached") {
+    throw new QuotaExceededError(res.body.error || "Monthly scan limit reached");
+  }
   if (res.status !== 201) {
     throw new ApiUnavailableError(`Failed to create scan: ${res.status} ${JSON.stringify(res.body)}`);
   }
@@ -79,4 +88,4 @@ async function ingestResults(apiUrl, apiKey, scanId, pages, ignoreRules = []) {
   return res.body;
 }
 
-module.exports = { createScan, ingestResults, ApiUnavailableError };
+module.exports = { createScan, ingestResults, ApiUnavailableError, QuotaExceededError };

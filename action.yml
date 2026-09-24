@@ -49,6 +49,9 @@ outputs:
   blocked:
     description: "Whether the PR is blocked (true/false)"
     value: ${{ steps.scan.outputs.blocked }}
+  quota-exceeded:
+    description: "Whether the scan was skipped because the monthly scan limit was reached (true/false)"
+    value: ${{ steps.scan.outputs.quota-exceeded }}
 
 runs:
   using: composite

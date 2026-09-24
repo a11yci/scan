@@ -1,6 +1,6 @@
 const core = require("@actions/core");
 const github = require("@actions/github");
-const { createScan, ingestResults, ApiUnavailableError } = require("./api");
+const { createScan, ingestResults, ApiUnavailableError, QuotaExceededError } = require("./api");
 const { scanUrl } = require("./scanner");
 const { loadIgnoreRules, CONFIG_FILE } = require("./config");
 
@@ -102,6 +102,7 @@ async function run() {
 
     const blocked = isBlocked(summary, failOn);
     core.setOutput("blocked", String(blocked));
+    core.setOutput("quota-exceeded", "false");
 
     await core.summary.addRaw(buildStepSummary(summary, blocked, failOn, exceptions)).write();
 
@@ -115,6 +116,24 @@ async function run() {
       core.info("a11yci: no new violations above threshold. Check passed.");
     }
   } catch (err) {
+    // Quota exhausted is NOT downtime: stay green (a billing state must never
+    // block a merge) but say so honestly everywhere the user might look. The
+    // server posts the matching PR comment (G5, spec quota-visibility).
+    if (err instanceof QuotaExceededError) {
+      core.setOutput("quota-exceeded", "true");
+      core.setOutput("blocked", "false");
+      core.warning(
+        "a11yci: monthly scan limit reached — this pull request was not scanned. " +
+        "The limit resets on the 1st of the month."
+      );
+      await core.summary
+        .addRaw(
+          "⚠️ a11yci scan skipped — monthly scan limit reached. " +
+          "Scans resume on the 1st of the month. Build not affected."
+        )
+        .write();
+      return;
+    }
     // Fail OPEN on a11yci API problems (PRD §23 Directive 1): our downtime
     // must never block a customer's merge. Scanner/config errors still fail.
     if (err instanceof ApiUnavailableError) {

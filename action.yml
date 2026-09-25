@@ -52,6 +52,9 @@ outputs:
   quota-exceeded:
     description: "Whether the scan was skipped because the monthly scan limit was reached (true/false)"
     value: ${{ steps.scan.outputs.quota-exceeded }}
+  app-installed:
+    description: "Whether the a11yci GitHub App is installed on this repo — PR comments cannot post without it (true/false)"
+    value: ${{ steps.scan.outputs.app-installed }}
 
 runs:
   using: composite

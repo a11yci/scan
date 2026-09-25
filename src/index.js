@@ -104,7 +104,28 @@ async function run() {
     core.setOutput("blocked", String(blocked));
     core.setOutput("quota-exceeded", "false");
 
-    await core.summary.addRaw(buildStepSummary(summary, blocked, failOn, exceptions)).write();
+    // App-install visibility (mirrors the quota pattern): the server tells us
+    // when the GitHub App is missing — without it the PR comment silently never
+    // posts. Warn everywhere the user might look; never change the conclusion.
+    // Absent field (older API) = assume installed, stay silent.
+    const appInstalled = result.app_installed !== false;
+    core.setOutput("app-installed", String(appInstalled));
+    const installUrl =
+      result.app_install_url || "https://github.com/apps/a11yci-app/installations/new";
+    if (!appInstalled) {
+      core.warning(
+        `a11yci: the a11yci GitHub App is not installed on ${repo}. Scan results were ` +
+        `recorded, but PR comments cannot post until it is installed: ${installUrl}`
+      );
+    }
+
+    let summaryMd = buildStepSummary(summary, blocked, failOn, exceptions);
+    if (!appInstalled) {
+      summaryMd +=
+        `\n\n⚠️ The a11yci GitHub App is not installed on this repository — ` +
+        `PR comments cannot post. [Install the App](${installUrl})`;
+    }
+    await core.summary.addRaw(summaryMd).write();
 
     if (blocked) {
       core.setFailed(

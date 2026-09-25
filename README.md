@@ -55,6 +55,13 @@ Add `A11YCI_KEY` to your repo secrets (Settings → Secrets and variables → Ac
 | `new-minor` | Count of new minor violations |
 | `blocked` | `true` if the PR is blocked, `false` otherwise |
 | `quota-exceeded` | `true` if the scan was skipped because your organization's monthly scan limit was reached, `false` otherwise |
+| `app-installed` | `false` if the a11yci GitHub App is not installed on this repo — scans still run, but PR comments cannot post until it is installed |
+
+> **PR comments come from the GitHub App.** The Action runs the scan and records
+> results; the a11yci GitHub App posts the PR comment. If the App isn't installed
+> on the repo, the check stays green and results are recorded, but you'll see a
+> warning annotation and a step-summary note with the install link instead of a
+> comment. Install once and comments post from the next scan onward.
 
 > **Monthly scan limit:** if your organization has used all of its included
 > scans for the month, the check stays green (we never block a merge over a

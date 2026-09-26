@@ -75,11 +75,12 @@ async function createScan(apiUrl, apiKey, { repo, prNumber, branch, commitSha, f
   return res.body;
 }
 
-async function ingestResults(apiUrl, apiKey, scanId, pages, ignoreRules = []) {
+async function ingestResults(apiUrl, apiKey, scanId, pages, ignoreRules = [], method = null) {
   const res = await request("POST", `${apiUrl}/api/v1/scans/ingest`, {
     scan_id: scanId,
     pages,
     ignore_rules: ignoreRules,
+    ...(method ? { method } : {}),
   }, apiKey);
 
   if (res.status !== 200) {

@@ -22,6 +22,14 @@ async function scanUrl(url, extraHeaders = {}, ignoreRules = []) {
       scan_duration_ms,
       violations: results.violations,
       violation_count: results.violations.length,
+      // axe's own account of how it ran — engine version, environment, options.
+      // Consumed by index.js for the evidence method manifest; never sent as
+      // page data (mirrors the server-side Kernel scanner).
+      axe_meta: {
+        testEngine: results.testEngine,
+        testEnvironment: results.testEnvironment,
+        toolOptions: results.toolOptions,
+      },
     };
   } finally {
     await browser.close();

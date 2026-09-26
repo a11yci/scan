@@ -102,3 +102,31 @@ test("ingest response passes app_installed through to the caller", async () => {
     }
   );
 });
+
+test("ingest sends the axe method block when provided, omits it when absent", async () => {
+  const { ingestResults } = require("../src/api");
+  const bodies = [];
+  await withServer(
+    (req, res) => {
+      let data = "";
+      req.on("data", (chunk) => (data += chunk));
+      req.on("end", () => {
+        bodies.push(JSON.parse(data));
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ scan_id: "scan-1", summary: { new: {}, total: {} } }));
+      });
+    },
+    async (url) => {
+      const method = {
+        testEngine: { name: "axe-core", version: "4.12.1" },
+        toolOptions: { reporter: "v1" },
+        scan_engine: "github_action",
+      };
+      await ingestResults(url, "a11y_key", "scan-1", [], [], method);
+      await ingestResults(url, "a11y_key", "scan-1", [], []);
+
+      assert.deepStrictEqual(bodies[0].method, method);
+      assert.strictEqual("method" in bodies[1], false);
+    }
+  );
+});

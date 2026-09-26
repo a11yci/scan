@@ -77,11 +77,17 @@ async function run() {
     }
 
     core.info(`Scanning ${url} with axe-core…`);
-    const page = await scanUrl(url, extraHeaders, ignoreRules);
+    const { axe_meta: axeMeta, ...page } = await scanUrl(url, extraHeaders, ignoreRules);
     core.info(`Found ${page.violation_count} violations on ${url}`);
 
+    // Evidence method block: axe's testEngine/testEnvironment/toolOptions plus
+    // where the scan ran. The server records it in the scan's frozen method
+    // manifest (specs/2026-09-25-as-of-record R5) — without it the record
+    // cannot say which axe version checked the page.
+    const method = { ...axeMeta, scan_engine: "github_action" };
+
     core.info("Ingesting results…");
-    const result = await ingestResults(apiUrl, apiKey, scan.id, [page], ignoreRules);
+    const result = await ingestResults(apiUrl, apiKey, scan.id, [page], ignoreRules, method);
 
     const { summary } = result;
     const exceptions = result.exceptions || [];

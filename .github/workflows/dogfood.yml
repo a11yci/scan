@@ -1,0 +1,21 @@
+# Dogfood, in public: a11yci scans its own marketing site with the
+# released Action, daily and on demand. The site's own (private) CI
+# also scans every push; this public run is the proof anyone can check.
+name: dogfood
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: a11yci/scan@v1
+        with:
+          url: https://a11yci-www.vercel.app
+          repo: a11yci/www
+          api-key: ${{ secrets.A11YCI_KEY }}
+          fail-on: none

@@ -1,0 +1,77 @@
+name: "a11yci Accessibility Scanner"
+description: "Scan a URL for WCAG accessibility violations on every pull request"
+author: "a11yci"
+
+branding:
+  icon: "eye"
+  color: "blue"
+
+inputs:
+  url:
+    description: "URL to scan (your staging or preview URL)"
+    required: true
+  api-key:
+    description: "a11yci API key (store as a GitHub secret)"
+    required: true
+  repo:
+    description: "Repository in owner/repo format (defaults to github.repository)"
+    required: false
+    default: ${{ github.repository }}
+  fail-on:
+    description: "Minimum severity that blocks the PR: critical, serious, moderate, minor, or none. Defaults to none (report-only) so new teams see violations without being blocked."
+    required: false
+    default: "none"
+  headers:
+    description: "Extra HTTP headers as JSON (e.g. for Vercel protection bypass or Cloudflare Access)"
+    required: false
+    default: "{}"
+  api-url:
+    description: "Override the a11yci API base URL (for local testing)"
+    required: false
+    default: "https://web-production-02844.up.railway.app"
+
+outputs:
+  scan-id:
+    description: "The scan ID created by a11yci"
+    value: ${{ steps.scan.outputs.scan-id }}
+  new-critical:
+    description: "Count of new critical violations"
+    value: ${{ steps.scan.outputs.new-critical }}
+  new-serious:
+    description: "Count of new serious violations"
+    value: ${{ steps.scan.outputs.new-serious }}
+  new-moderate:
+    description: "Count of new moderate violations"
+    value: ${{ steps.scan.outputs.new-moderate }}
+  new-minor:
+    description: "Count of new minor violations"
+    value: ${{ steps.scan.outputs.new-minor }}
+  blocked:
+    description: "Whether the PR is blocked (true/false)"
+    value: ${{ steps.scan.outputs.blocked }}
+  quota-exceeded:
+    description: "Whether the scan was skipped because the monthly scan limit was reached (true/false)"
+    value: ${{ steps.scan.outputs.quota-exceeded }}
+  app-installed:
+    description: "Whether the a11yci GitHub App is installed on this repo — PR comments cannot post without it (true/false)"
+    value: ${{ steps.scan.outputs.app-installed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install action dependencies
+      shell: bash
+      run: npm ci
+      working-directory: ${{ github.action_path }}
+    - name: Run a11yci scan
+      id: scan
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_API-KEY: ${{ inputs.api-key }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_FAIL-ON: ${{ inputs.fail-on }}
+        INPUT_HEADERS: ${{ inputs.headers }}
+        INPUT_API-URL: ${{ inputs.api-url }}
+      run: node src/index.js

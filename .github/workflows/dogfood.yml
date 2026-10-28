@@ -4,8 +4,8 @@
 name: dogfood
 
 on:
-  schedule:
-    - cron: "17 6 * * *"
+  # PARKED 2026-10-27: schedule:
+    #   - cron: "17 6 * * *"
   workflow_dispatch:
 
 jobs:
